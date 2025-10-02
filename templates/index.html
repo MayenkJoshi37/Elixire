@@ -6,27 +6,27 @@
   <title>Elixire Assistant Chatbot</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gradient-to-br from-purple-100 via-pink-50 to-yellow-50 flex items-center justify-center min-h-screen p-4 font-sans">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4 font-sans">
 
-  <div class="w-full max-w-xl p-6 bg-white/80 backdrop-blur-lg rounded-3xl shadow-2xl border border-purple-300 flex flex-col">
+  <div class="w-full max-w-3xl p-6 bg-white rounded-2xl shadow-2xl flex flex-col border border-gray-300">
     
     <!-- Title -->
-    <h1 class="text-4xl sm:text-5xl font-extrabold mb-6 text-center text-purple-700 drop-shadow-lg">
-      ✨ Elixire Assistant ✨
+    <h1 class="text-4xl sm:text-5xl font-bold mb-6 text-center text-gray-800">
+      Elixire Assistant
     </h1>
 
     <!-- Chat container -->
-    <div id="chat-box" class="h-[500px] sm:h-[600px] overflow-y-auto flex flex-col gap-4 p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl shadow-inner border border-purple-200">
+    <div id="chat-box" class="h-[500px] sm:h-[600px] overflow-y-auto flex flex-col gap-4 p-4 bg-gray-50 rounded-xl shadow-inner border border-gray-200">
       <!-- Messages will appear here -->
     </div>
 
     <!-- Input -->
     <form id="chat-form" class="flex mt-4" onsubmit="return false;">
       <input id="user-input" type="text" placeholder="Type your message..." 
-             class="flex-1 p-4 rounded-l-2xl border border-purple-300 focus:outline-none focus:ring-2 focus:ring-pink-400 focus:ring-offset-1 text-lg shadow-inner"
+             class="flex-1 p-4 rounded-l-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-1 text-lg"
              autocomplete="off" />
       <button id="send-btn" type="button" 
-              class="bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 text-white px-8 rounded-r-2xl font-semibold hover:scale-105 transform transition-all shadow-lg hover:shadow-2xl">
+              class="bg-gray-700 text-white px-8 rounded-r-xl font-semibold hover:bg-gray-800 transition-all shadow-md">
         Send
       </button>
     </form>
@@ -40,10 +40,10 @@
 
     function appendMessage(sender, text, isUser) {
       const msg = document.createElement("div");
-      msg.className = `transition-all duration-300 ease-out p-4 max-w-[80%] break-words shadow-lg rounded-2xl animate-fadeIn ${
+      msg.className = `transition-all duration-300 ease-out p-4 max-w-[85%] break-words shadow rounded-xl animate-fadeIn ${
         isUser 
-          ? "self-end bg-gradient-to-r from-purple-600 via-pink-500 to-yellow-400 text-white font-semibold text-lg shadow-xl" 
-          : "self-start bg-white/90 text-purple-900 font-medium border border-purple-300 backdrop-blur-md"
+          ? "self-end bg-gray-700 text-white font-medium text-lg" 
+          : "self-start bg-gray-100 text-gray-800 font-medium border border-gray-200"
       }`;
       msg.innerHTML = `<strong>${sender}:</strong><br>${text}`;
       chatBox.appendChild(msg);
@@ -53,7 +53,7 @@
     function appendTypingIndicator() {
       const typing = document.createElement("div");
       typing.id = "typing-indicator";
-      typing.className = "self-start p-4 rounded-2xl max-w-[80%] bg-purple-200/80 text-purple-900 animate-pulse font-medium shadow-inner";
+      typing.className = "self-start p-4 rounded-xl max-w-[85%] bg-gray-200 text-gray-700 animate-pulse font-medium shadow-inner";
       typing.textContent = "Assistant is typing...";
       chatBox.appendChild(typing);
       chatBox.scrollTop = chatBox.scrollHeight;
@@ -76,7 +76,7 @@
         const match = line.match(/^(\d+)\.\s+(.*)/);
         if (match) {
           if (!olOpen) {
-            formattedLines.push("<ol class='list-decimal list-inside mb-2 pl-5 marker:text-purple-700'>");
+            formattedLines.push("<ol class='list-decimal list-inside mb-2 pl-5 marker:text-gray-700'>");
             olOpen = true;
           }
           formattedLines.push(`<li>${match[2]}</li>`);
@@ -86,7 +86,7 @@
             olOpen = false;
           }
           if (line.toLowerCase().startsWith("tip:") || line.toLowerCase().startsWith("*tip")) {
-            formattedLines.push(`<p class="italic text-purple-600 mt-2">${line}</p>`);
+            formattedLines.push(`<p class="italic text-gray-600 mt-2">${line}</p>`);
           } else if(line.trim() !== "") {
             formattedLines.push(`<p class="mt-1">${line}</p>`);
           }
