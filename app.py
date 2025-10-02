@@ -306,21 +306,31 @@ def normalize_lang_code(lang: str) -> str:
     return mapping.get(lang, lang.capitalize())
 
 def postprocess_answer(answer_eng: str, target_lang: str) -> str:
+    """
+    Step 3: Translate the English answer back into the user's original language (if not English).
+    """
     target_lang = normalize_lang_code(target_lang)
     if target_lang == "English":
         return answer_eng
+
+    # Updated prompt: enforce simple, easy-to-understand language
     system_prompt = f"""
     You are a translator.
     Convert the following English text into {target_lang}.
+    - Use very simple, easy-to-understand words.
+    - Avoid complex or formal language.
     - Keep the same numbering, steps, and structure.
     - Do not add extra commentary.
     """
+
     messages = [
         SystemMessage(content=system_prompt),
         HumanMessage(content=answer_eng),
     ]
+
     try:
         return llm_groq.invoke(messages).content
     except Exception as e:
         print(f"[Warning] Translation failed: {e}")
         return answer_eng
+

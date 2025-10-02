@@ -6,19 +6,22 @@
   <title>Elixire Assistant Chatbot</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen">
-  <div class="w-full max-w-5xl p-6 bg-white rounded-xl shadow-lg flex flex-col">
-    <h1 class="text-3xl font-bold mb-4 text-center text-blue-600">Elixire Assistant</h1>
+<body class="bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center min-h-screen p-4">
+  <div class="w-full max-w-xl p-6 bg-white rounded-2xl shadow-2xl flex flex-col">
+    <h1 class="text-3xl sm:text-4xl font-bold mb-6 text-center text-blue-600">Elixire Assistant</h1>
 
-    <div id="chat-box" class="h-[600px] overflow-y-auto flex flex-col gap-3 p-4 bg-gray-50 rounded-lg font-sans text-lg text-gray-900">
+    <div id="chat-box" class="h-[500px] sm:h-[600px] overflow-y-auto flex flex-col gap-3 p-4 bg-gray-50 rounded-xl font-sans text-lg text-gray-900 scroll-smooth">
       <!-- Messages appear here -->
     </div>
 
     <form id="chat-form" class="flex mt-4" onsubmit="return false;">
       <input id="user-input" type="text" placeholder="Type your message..." 
-             class="flex-1 p-3 rounded-l-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
+             class="flex-1 p-3 rounded-l-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 text-lg"
              autocomplete="off" />
-      <button id="send-btn" type="button" class="bg-blue-500 text-white px-6 rounded-r-lg hover:bg-blue-600 transition text-lg">Send</button>
+      <button id="send-btn" type="button" 
+              class="bg-blue-500 text-white px-6 rounded-r-xl hover:bg-blue-600 transition-all duration-200 shadow-md hover:shadow-lg text-lg">
+        Send
+      </button>
     </form>
   </div>
 
@@ -30,9 +33,9 @@
 
     function appendMessage(sender, text, isUser) {
       const msg = document.createElement("div");
-      msg.className = `${isUser 
+      msg.className = `transition-all duration-300 ease-out ${isUser 
         ? "self-end bg-blue-500 text-white text-lg font-medium" 
-        : "self-start bg-gray-200 text-gray-900 text-lg font-medium"} p-4 rounded-xl max-w-[80%] break-words shadow-sm`;
+        : "self-start bg-gray-200 text-gray-900 text-lg font-medium"} p-4 rounded-2xl max-w-[80%] break-words shadow-sm animate-fadeIn`;
       msg.innerHTML = `<strong>${sender}:</strong><br>${text}`;
       chatBox.appendChild(msg);
       chatBox.scrollTop = chatBox.scrollHeight;
@@ -41,7 +44,7 @@
     function appendTypingIndicator() {
       const typing = document.createElement("div");
       typing.id = "typing-indicator";
-      typing.className = "self-start p-4 rounded-xl max-w-[80%] bg-gray-200 text-gray-900 animate-pulse";
+      typing.className = "self-start p-4 rounded-2xl max-w-[80%] bg-gray-200 text-gray-900 animate-pulse font-medium";
       typing.textContent = "Assistant is typing...";
       chatBox.appendChild(typing);
       chatBox.scrollTop = chatBox.scrollHeight;
@@ -53,10 +56,7 @@
     }
 
     function formatLLMOutput(text) {
-      // Remove ANSI codes
       text = text.replace(/\x1b\[\d+m/g, "");
-
-      // Convert bold (**text**) to <strong>
       text = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
 
       const lines = text.split("\n");
@@ -76,7 +76,6 @@
             formattedLines.push("</ol>");
             olOpen = false;
           }
-          // Keep tips italic
           if (line.toLowerCase().startsWith("tip:") || line.toLowerCase().startsWith("*tip")) {
             formattedLines.push(`<p class="italic text-gray-700 mt-2">${line}</p>`);
           } else if(line.trim() !== "") {
@@ -120,7 +119,6 @@
       }
     }
 
-    // Attach
     sendBtn.addEventListener("click", sendMessage);
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) {
@@ -129,5 +127,13 @@
       }
     });
   </script>
+
+  <style>
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+  </style>
 </body>
 </html>
