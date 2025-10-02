@@ -1,0 +1,8 @@
+google-genai
+chromadb
+langchain-groq
+langchain-core
+python-dotenv
+Flask
+gunicorn
+requests
