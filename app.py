@@ -5,8 +5,8 @@ import json
 import zipfile
 import shutil
 import tempfile
-from typing import Optional
-import chromadb
+import threading
+from typing import Optional, List
 import requests
 from dotenv import load_dotenv
 from langchain_groq import ChatGroq as groq
@@ -15,36 +15,38 @@ from google import genai
 
 load_dotenv()
 
-# --- Config (tweak via env) ---
+# --- Gemini embedding client setup ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     raise RuntimeError("Please set GEMINI_API_KEY in your environment (.env or export).")
 client = genai.Client(api_key=GEMINI_API_KEY)
 EMBEDDING_MODEL = os.getenv("EMBEDDING_MODEL", "gemini-embedding-001")
 
-# Where Chroma DB will live inside the container
+# --- Chroma DB config (lazy loaded) ---
 CHROMA_PATH = os.getenv("CHROMA_PATH", "./chroma_db")
-# URL to download zipped chroma_db (set in Render env vars); prefer a direct HTTPS URL (S3, Drive 'uc?export=download&id=...', Dropbox direct link, etc.)
 CHROMA_DB_DOWNLOAD_URL = os.getenv("CHROMA_DB_DOWNLOAD_URL")
-# Optional: if using Google Drive and you only have the file id, Render can build a download URL
 CHROMA_DB_DRIVE_FILE_ID = os.getenv("CHROMA_DB_DRIVE_FILE_ID")
+CHROMA_COLLECTION_NAME = os.getenv("CHROMA_COLLECTION_NAME", "elixire_docs_bge_large")
 
-# --- Helper: download & extract chroma db ---
+# Internal lazy references
+_vector_db = None
+_collection = None
+_chroma_lock = threading.Lock()
+
+# --- GROQ LLM setup (unchanged) ---
+llm_groq = groq(model_name=os.getenv("GROQ_MODEL_NAME", "openai/gpt-oss-120b"), api_key=os.getenv("GROQ_API_KEY"))
+
+# --- Helper: Download & extract chroma_db (copied/robust) ---
 def _is_chroma_present(path: str) -> bool:
-    try:
-        return os.path.isdir(path) and len(os.listdir(path)) > 0
-    except Exception:
-        return False
+    return os.path.isdir(path) and len(os.listdir(path)) > 0
 
 def _save_stream_to_file(resp, dest_path: str):
-    # stream write to file
     with open(dest_path, "wb") as f:
         for chunk in resp.iter_content(chunk_size=32768):
             if chunk:
                 f.write(chunk)
 
 def _download_from_google_drive(file_id: str, dest: str, session: Optional[requests.Session] = None):
-    # Handles Drive "large file" confirm flow
     if session is None:
         session = requests.Session()
     URL = "https://docs.google.com/uc?export=download"
@@ -61,62 +63,45 @@ def _download_from_google_drive(file_id: str, dest: str, session: Optional[reque
 
 def _download_url_to_file(url: str, dest: str):
     session = requests.Session()
-    # special-case Google Drive links
     if "drive.google.com" in url and "uc?export=download" not in url:
-        # try to extract id (works for many share link forms)
-        # Examples:
-        # https://drive.google.com/file/d/<FILEID>/view?usp=sharing
         import re
         m = re.search(r"/d/([a-zA-Z0-9_-]+)", url)
         if m:
             file_id = m.group(1)
             return _download_from_google_drive(file_id, dest, session=session)
-        # else fallback to streaming the URL directly
     resp = session.get(url, stream=True, timeout=60)
     resp.raise_for_status()
     _save_stream_to_file(resp, dest)
 
 def ensure_chroma_db_available():
     """
-    If CHROMA_PATH already exists and has files, do nothing.
-    Otherwise attempt to download a zip and extract it into CHROMA_PATH.
+    Download & extract chroma_db into CHROMA_PATH if not already present.
+    Safe to call multiple times.
     """
     if _is_chroma_present(CHROMA_PATH):
         print(f"[Chroma] Found existing ChromaDB at {CHROMA_PATH}")
         return
 
-    # Determine a download URL
+    # Determine download URL
     download_url = CHROMA_DB_DOWNLOAD_URL
     if not download_url and CHROMA_DB_DRIVE_FILE_ID:
         download_url = f"https://docs.google.com/uc?export=download&id={CHROMA_DB_DRIVE_FILE_ID}"
 
     if not download_url:
-        print("[Chroma] No CHROMA_DB_DOWNLOAD_URL or CHROMA_DB_DRIVE_FILE_ID set; starting without persistent DB.")
+        print("[Chroma] No CHROMA_DB_DOWNLOAD_URL or CHROMA_DB_DRIVE_FILE_ID set; skipping download.")
         return
 
     print(f"[Chroma] Will attempt to download ChromaDB from: {download_url}")
-
-    # Make temp file
     tmp_dir = tempfile.mkdtemp()
     try:
         zip_path = os.path.join(tmp_dir, "chroma_db.zip")
-        print(f"[Chroma] Downloading to temporary file: {zip_path} ... (this may take a minute)")
-        try:
-            _download_url_to_file(download_url, zip_path)
-        except Exception as e:
-            print(f"[Chroma] Download failed: {e}")
-            raise
+        print(f"[Chroma] Downloading to temporary file: {zip_path} ...")
+        _download_url_to_file(download_url, zip_path)
 
-        # Extract
         print(f"[Chroma] Extracting {zip_path} -> {CHROMA_PATH} ...")
         os.makedirs(CHROMA_PATH, exist_ok=True)
-        try:
-            with zipfile.ZipFile(zip_path, "r") as zf:
-                zf.extractall(CHROMA_PATH)
-        except zipfile.BadZipFile:
-            # maybe the uploaded file wasn't zipped — try copying it directly (as fallback)
-            print("[Chroma] Not a zip file; attempting to move file into CHROMA_PATH directly.")
-            shutil.copy(zip_path, os.path.join(CHROMA_PATH, "chroma_db_downloaded"))
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            zf.extractall(CHROMA_PATH)
         print("[Chroma] Extraction complete.")
     finally:
         try:
@@ -124,32 +109,38 @@ def ensure_chroma_db_available():
         except Exception:
             pass
 
-# Ensure DB present (or at least attempt to fetch it) *before* creating the persistent client
-try:
-    ensure_chroma_db_available()
-except Exception as e:
-    # If download fails, we still proceed — app will run but any queries that hit the vector DB may fail.
-    print(f"[Warning] ensure_chroma_db_available failed: {e}")
+# --- Lazy init for PersistentClient and collection ---
+def _init_chroma_if_needed():
+    """
+    Thread-safe initialization of vector_db and collection.
+    Returns the collection or None on failure.
+    """
+    global _vector_db, _collection
+    if _collection is not None:
+        return _collection
 
-# --- Initialize ChromaDB persistent client AFTER the above attempt ---
-try:
-    vector_db = chromadb.PersistentClient(path=CHROMA_PATH)
-    print(f"[Info] Initialized chroma PersistentClient at {CHROMA_PATH}")
-except Exception as e:
-    # If initialization fails, raise an informative error so logs show what's wrong.
-    raise RuntimeError(f"Failed to initialize ChromaDB PersistentClient at {CHROMA_PATH}: {e}")
+    with _chroma_lock:
+        if _collection is not None:
+            return _collection
 
-COLLECTION_NAME = os.getenv("CHROMA_COLLECTION_NAME", "elixire_docs_bge_large")
-collection = vector_db.get_or_create_collection(
-    name=COLLECTION_NAME,
-    metadata={"hnsw:space": "cosine"}
-)
-print(f"[Info] Connected to ChromaDB collection: {COLLECTION_NAME} at {CHROMA_PATH}")
+        # Try to ensure DB files exist (download if configured)
+        try:
+            ensure_chroma_db_available()
+        except Exception as e:
+            print(f"[Chroma] Warning: download/extract failed: {e}")
 
-# --- GROQ LLM setup (unchanged) ---
-llm_groq = groq(model_name=os.getenv("GROQ_MODEL_NAME", "openai/gpt-oss-120b"), api_key=os.getenv("GROQ_API_KEY"))
+        try:
+            import chromadb
+            _vector_db = chromadb.PersistentClient(path=CHROMA_PATH)
+            _collection = _vector_db.get_or_create_collection(name=CHROMA_COLLECTION_NAME, metadata={"hnsw:space": "cosine"})
+            print(f"[Info] Initialized Chroma PersistentClient at {CHROMA_PATH}")
+        except Exception as e:
+            print(f"[Chroma] Error initializing PersistentClient: {e}")
+            _vector_db = None
+            _collection = None
+    return _collection
 
-# --- embedding helpers (unchanged) ---
+# --- Embedding helpers (unchanged) ---
 def _extract_numeric_list(obj):
     while isinstance(obj, (list, tuple)) and len(obj) == 1:
         obj = obj[0]
@@ -199,16 +190,34 @@ def embed_text(text: str):
         raise RuntimeError("Could not parse embedding returned by Gemini (unexpected structure).")
     return vec
 
-def get_relevant_chunks(query: str, n_results: int = 1) -> list:
-    query_embedding = embed_text(query)
-    results = collection.query(query_embeddings=[query_embedding], n_results=n_results)
-    docs = []
+# --- Public functions used by web_server.py ---
+def get_relevant_chunks(query: str, n_results: int = 1) -> List[str]:
+    """Retrieve context chunks from ChromaDB using Gemini embeddings.
+    Lazy-initializes chroma if needed.
+    """
+    coll = _init_chroma_if_needed()
+    if coll is None:
+        print("[Chroma] Collection not available, returning empty context.")
+        return []
+
     try:
-        docs = results.get("documents", [[]])[0]
-    except Exception:
-        if "documents" in results and results["documents"]:
-            docs = results["documents"][0]
-    return docs or []
+        query_embedding = embed_text(query)
+    except Exception as e:
+        print(f"[Embedding] Failed to create embedding: {e}")
+        return []
+
+    try:
+        results = coll.query(query_embeddings=[query_embedding], n_results=n_results)
+        docs = []
+        try:
+            docs = results.get("documents", [[]])[0]
+        except Exception:
+            if "documents" in results and results["documents"]:
+                docs = results["documents"][0]
+        return docs or []
+    except Exception as e:
+        print(f"[Chroma] Query failed: {e}")
+        return []
 
 def generate_response(user_message: str, context_chunks: list) -> str:
     context = "\n\n".join(context_chunks)
@@ -315,45 +324,3 @@ def postprocess_answer(answer_eng: str, target_lang: str) -> str:
     except Exception as e:
         print(f"[Warning] Translation failed: {e}")
         return answer_eng
-
-
-# (Interactive main loop commented out, keep as before)
-# def main():
-#     print("\n[Info] Running in GROQ-only mode.")
-#     print("Enter your message. Type 'quit' or 'exit' to end the chat.")
-
-#     while True:
-#         user_message = input("\nYou: ")
-#         if user_message.lower() in ["quit", "exit"]:
-#             print("Goodbye!")
-#             break
-
-#         # Step 1: preprocess user query
-#         print("[Step 1] Preprocessing user query...")
-#         query_data = preprocess_user_query(user_message)
-#         user_query_eng = query_data["user_query_eng"]
-#         user_lang = query_data["user_original_query_lang"]
-#         print(f"[Info] Refined/translated query: {user_query_eng}")
-#         print(f"[Info] Original language: {user_lang}")
-
-#         # Step 2: retrieve context
-#         print("[Step 2] Searching knowledge base for relevant context...")
-#         relevant_chunks = get_relevant_chunks(user_query_eng)
-#         print(f"[Info] Retrieved {len(relevant_chunks)} relevant chunk(s).")
-
-#         # Step 3: generate English answer
-#         print("[Step 3] Generating response from Groq...")
-#         final_response_eng = generate_response(user_query_eng, relevant_chunks)
-
-#         # Step 4: postprocess answer into original language (if needed)
-#         print("[Step 4] Translating answer back (if required)...")
-#         final_response = postprocess_answer(final_response_eng, user_lang)
-
-#         formatted = format_llm_output(final_response)
-#         print(f"\n--- GROQ's Response ---\n")
-#         print(formatted)
-#         print("\n--- End of response ---\n")
-
-
-# if __name__ == "__main__":
-#     main()
