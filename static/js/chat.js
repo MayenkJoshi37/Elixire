@@ -8,8 +8,9 @@ function bubble(sender, text, isUser) {
     div.className = `p-5 rounded-2xl max-w-[80%] bubble-pop shadow ${
         isUser 
         ? "ml-auto bg-white text-gray-900"
-        : "bg-white/10 text-white backdrop-blur-lg"
+        : "bg-white/10 text-white backdrop-blur-lg border border-white/10"
     }`;
+
     div.innerHTML = `<strong>${sender}:</strong><br>${text}`;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -18,7 +19,7 @@ function bubble(sender, text, isUser) {
 function typing() {
     const t = document.createElement("div");
     t.id = "typing";
-    t.className = "p-4 rounded-xl text-gray-200 bounce";
+    t.className = "p-4 rounded-xl text-gray-300 italic";
     t.textContent = "Assistant is typing...";
     chatBox.appendChild(t);
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -44,7 +45,7 @@ async function sendMessage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message: text })
     });
-    
+
     stopTyping();
     sendBtn.disabled = false;
 
@@ -57,4 +58,6 @@ async function sendMessage() {
 }
 
 sendBtn.onclick = sendMessage;
-input.onkeydown = e => e.key === "Enter" && sendMessage();
+input.addEventListener("keydown", e => {
+    if (e.key === "Enter") sendMessage();
+});
