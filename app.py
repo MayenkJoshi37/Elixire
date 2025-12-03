@@ -257,10 +257,39 @@ def generate_response(user_message: str, context_chunks: list) -> str:
     return llm_groq.invoke(messages).content
 
 def format_llm_output(response: str) -> str:
+    # Remove <think>...</think>
     response = re.sub(r"<think>.*?</think>", "", response, flags=re.DOTALL)
-    response = re.sub(r"\*\*(.*?)\*\*", r"\033[1m\1\033[0m", response)
-    response = re.sub(r"\n\s*\n", "\n\n", response.strip())
-    return response
+
+    # Convert ANSI bold to <strong>
+    response = re.sub(r"\x1b\[1m(.*?)\x1b\[0m", r"<strong>\1</strong>", response)
+
+    # Convert **bold** to <strong>
+    response = re.sub(r"\*\*(.*?)\*\*", r"<strong>\1</strong>", response)
+
+    # Format numbered lists
+    lines = response.split("\n")
+    formatted = []
+    in_list = False
+
+    for line in lines:
+        step = re.match(r"\s*(\d+)\.\s+(.*)", line)
+        if step:
+            if not in_list:
+                formatted.append("<ol class='list-decimal ml-6 space-y-1'>")
+                in_list = True
+            formatted.append(f"<li>{step.group(2)}</li>")
+        else:
+            if in_list:
+                formatted.append("</ol>")
+                in_list = False
+            if line.strip():
+                formatted.append(f"<p class='my-2'>{line}</p>")
+
+    if in_list:
+        formatted.append("</ol>")
+
+    return "\n".join(formatted)
+
 
 def preprocess_user_query(user_message: str) -> dict:
     system_prompt = """

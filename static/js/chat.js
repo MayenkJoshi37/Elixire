@@ -5,10 +5,13 @@ const langDisplay = document.getElementById("lang-display");
 
 function bubble(sender, text, isUser) {
     const div = document.createElement("div");
-    div.className = `p-4 rounded-xl max-w-[80%] shadow fade-in ${
-        isUser ? "ml-auto bg-white text-gray-900" : "bg-gray-800 text-gray-200"
+    div.className = `p-5 rounded-2xl max-w-[80%] bubble-pop shadow-xl ${
+        isUser 
+          ? "ml-auto bg-white text-gray-900 chat-user" 
+          : "bg-gray-800/70 text-gray-100 border border-gray-600 chat-bot"
     }`;
-    div.innerHTML = `<strong>${sender}:</strong><br>${text}`;
+
+    div.innerHTML = `<strong class="text-blue-200">${sender}:</strong><br>${text}`;
     chatBox.appendChild(div);
     chatBox.scrollTop = chatBox.scrollHeight;
 }
@@ -16,7 +19,7 @@ function bubble(sender, text, isUser) {
 function typing() {
     const t = document.createElement("div");
     t.id = "typing";
-    t.className = "p-4 rounded-xl bg-gray-700/50 text-gray-300 fade-in";
+    t.className = "p-4 rounded-xl bg-gray-700/50 text-gray-300 fade-in typing-pulse";
     t.innerText = "Assistant is typing...";
     chatBox.appendChild(t);
     chatBox.scrollTop = chatBox.scrollHeight;
@@ -49,11 +52,9 @@ async function sendMessage() {
 
     if (data.success) {
         langDisplay.classList.remove("hidden");
-        langDisplay.innerText = "Detected Language: " + data.detected_language;
+        langDisplay.innerText = "Detected Language: " + data.original_language;
         bubble("Assistant", data.answer, false);
     }
 }
 sendBtn.onclick = sendMessage;
-input.addEventListener("keydown", e => {
-    if (e.key === "Enter") sendMessage();
-});
+input.addEventListener("keydown", e => e.key === "Enter" && sendMessage());

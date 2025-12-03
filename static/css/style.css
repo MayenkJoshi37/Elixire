@@ -138,3 +138,13 @@
     transition: 0.3s ease;
     box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
 }
+
+@keyframes pulse-slow {
+    0% { opacity: 0.8; }
+    50% { opacity: 1; }
+    100% { opacity: 0.8; }
+}
+
+.animate-pulse-slow {
+    animation: pulse-slow 4s infinite ease-in-out;
+}
