@@ -1,150 +1,117 @@
 /* ------------------------------
-   GLOBAL GLASS & EFFECTS
+   ANIMATED MOVING BACKGROUND
+--------------------------------*/
+.animated-bg {
+    position: fixed;
+    width: 200%;
+    height: 200%;
+    top: -50%;
+    left: -50%;
+    z-index: -10;
+
+    background: linear-gradient(
+        120deg,
+        rgba(0, 120, 255, 0.4),
+        rgba(180, 0, 255, 0.4),
+        rgba(255, 120, 0, 0.4),
+        rgba(0, 200, 255, 0.4)
+    );
+    background-size: 300% 300%;
+    animation: moveGradient 20s infinite alternate ease-in-out;
+}
+
+@keyframes moveGradient {
+    0% { transform: translate(0,0); }
+    50% { transform: translate(25%, -20%); }
+    100% { transform: translate(-20%, 20%); }
+}
+
+
+/* ------------------------------
+       GLASS COMPONENTS
 --------------------------------*/
 
-.glass {
-    backdrop-filter: blur(14px);
+.glass-card {
+    backdrop-filter: blur(22px);
     background: rgba(255, 255, 255, 0.12);
     border: 1px solid rgba(255, 255, 255, 0.15);
+    transition: 0.3s ease;
+}
+.glass-card:hover {
+    transform: translateY(-6px);
+    background: rgba(255, 255, 255, 0.18);
 }
 
-/* Soft Glow (used for buttons/cards) */
-.glow:hover {
-    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
-    transform: translateY(-2px);
-    transition: 0.25s ease;
+.glass-super {
+    backdrop-filter: blur(30px);
+    background: rgba(255, 255, 255, 0.10);
+    border: 1px solid rgba(255, 255, 255, 0.25);
 }
-
-/* ------------------------------
-   ANIMATIONS
---------------------------------*/
-
-.fade-in {
-    animation: fadeIn 0.6s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.slide-up {
-    animation: slideUp 0.8s ease-out;
-}
-
-@keyframes slideUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.typing-pulse {
-    animation: pulse 1.2s infinite ease-in-out;
-}
-
-@keyframes pulse {
-    0% { opacity: .3; }
-    50% { opacity: 1; }
-    100% { opacity: .3; }
-}
-
-/* Message bubble pop */
-.bubble-pop {
-    animation: bubblePop 0.3s ease-out;
-}
-
-@keyframes bubblePop {
-    0% { transform: scale(0.85); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* ------------------------------
-   SCROLLBAR STYLING
---------------------------------*/
-
-::-webkit-scrollbar {
-    width: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: rgba(255, 255, 255, 0.05);
-}
-
-::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.28);
-    border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.45);
-}
-
-/* ------------------------------
-   CHAT BUBBLE LOOK ENHANCEMENTS
---------------------------------*/
-
-.chat-user {
-    background: rgba(255, 255, 255, 0.85);
-    color: #111;
-    border-radius: 16px 16px 0 16px;
-}
-
-.chat-bot {
-    background: rgba(0, 0, 0, 0.35);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    color: #f1f1f1;
-    border-radius: 16px 16px 16px 0;
-}
-
-/* ------------------------------
-   INPUT FIELD CUSTOM DESIGN
---------------------------------*/
 
 .glass-input {
-    backdrop-filter: blur(10px);
-    background: rgba(255, 255, 255, 0.18);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    transition: 0.3s;
+    backdrop-filter: blur(18px);
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 }
-
 .glass-input:focus {
-    background: rgba(255, 255, 255, 0.28);
-    border-color: white;
+    background: rgba(0, 0, 0, 0.6);
     outline: none;
 }
 
-/* ------------------------------
-   BUTTONS
---------------------------------*/
-
 .glass-btn {
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.85);
     color: #111;
-    transition: 0.25s ease;
+    transition: 0.2s;
 }
-
 .glass-btn:hover {
     background: #fff;
+    box-shadow: 0 0 30px rgba(255,255,255,0.5);
     transform: translateY(-2px);
-    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.25);
 }
+
+.btn-primary {
+    background: white;
+    color: black;
+    border-radius: 14px;
+    transition: 0.3s;
+}
+.btn-primary:hover {
+    transform: scale(1.1);
+    box-shadow: 0 0 35px rgba(255,255,255,0.4);
+}
+
 
 /* ------------------------------
-   EXTRA COMPONENTS
+         ANIMATIONS
 --------------------------------*/
-
-/* Floating subtle shadows */
-.card-float:hover {
-    transform: translateY(-6px);
-    transition: 0.3s ease;
-    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+.fade-in {
+    animation: fade 0.8s ease-out;
+}
+@keyframes fade {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulse-slow {
-    0% { opacity: 0.8; }
-    50% { opacity: 1; }
-    100% { opacity: 0.8; }
+.hero-glow {
+    animation: heroPulse 4s infinite alternate ease-in-out;
+}
+@keyframes heroPulse {
+    from { opacity: 0.85; }
+    to { opacity: 1; }
 }
 
-.animate-pulse-slow {
-    animation: pulse-slow 4s infinite ease-in-out;
+
+/* Chat bubbles */
+.bubble-pop { animation: bubble 0.25s ease-out; }
+@keyframes bubble {
+    from { opacity: 0; transform: scale(0.85); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.25);
+    border-radius: 4px;
 }

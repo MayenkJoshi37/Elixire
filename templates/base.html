@@ -4,36 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ title or "Elixire Assistant" }}</title>
+
+    <!-- Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Smooth Animations -->
-    <style>
-        .fade-in { animation: fadeIn 0.6s ease-out; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .glass {
-            backdrop-filter: blur(14px);
-            background: rgba(255,255,255,0.15);
-        }
-    </style>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
 
-<body class="bg-gradient-to-br from-gray-900 to-gray-700 text-white min-h-screen">
+<body class="relative min-h-screen text-white">
 
-<nav class="flex justify-between px-8 py-4 items-center bg-gray-900/50 backdrop-blur-md fixed w-full top-0 z-10">
-    <h1 class="text-2xl font-bold tracking-wide">Elixire</h1>
+    <!-- 🔥 Animated gradient background -->
+    <div class="animated-bg"></div>
 
-    <div class="space-x-6">
-        <a href="/" class="hover:text-gray-300 transition">Home</a>
-        <a href="/chatbot" class="hover:text-gray-300 transition">Chatbot</a>
-    </div>
-</nav>
+    <!-- NAVBAR -->
+    <nav class="fixed top-0 w-full z-50 backdrop-blur-xl bg-black/20 border-b border-white/10">
+        <div class="max-w-7xl mx-auto flex justify-between items-center px-8 py-4">
+            <h1 class="text-2xl font-bold tracking-wide">Elixire</h1>
+            <div class="space-x-8 text-lg">
+                <a href="/" class="hover:text-gray-300 transition-all">Home</a>
+                <a href="/chatbot" class="hover:text-gray-300 transition-all">Chatbot</a>
+            </div>
+        </div>
+    </nav>
 
-<div class="pt-24">
-    {% block content %}{% endblock %}
-</div>
+    <main class="pt-28 relative z-20">
+        {% block content %}{% endblock %}
+    </main>
 
 </body>
 </html>

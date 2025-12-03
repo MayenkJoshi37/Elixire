@@ -1,38 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
 
-<!-- HERO -->
-<section class="text-center fade-in px-6 py-24">
-    <h1 class="text-6xl font-extrabold mb-6 bg-gradient-to-r from-blue-400 to-purple-500 text-transparent bg-clip-text animate-pulse-slow">
+<!-- HERO SECTION -->
+<section class="text-center px-6 py-32 fade-in">
+    <h1 class="text-7xl font-extrabold mb-6 bg-gradient-to-r from-blue-300 to-purple-400 text-transparent bg-clip-text hero-glow">
         Elixire Assistant
     </h1>
 
-    <p class="text-gray-300 text-xl max-w-3xl mx-auto leading-relaxed">
-        A smart industry-grade multilingual RAG assistant designed for modern pharmacy operations.
-        Powered by Gemini + Groq + ChromaDB.
+    <p class="text-gray-200 text-2xl max-w-4xl mx-auto leading-relaxed mb-10">
+        A next-generation multilingual RAG-driven assistant built for modern pharmacies.  
+        Fast, accurate, and designed to handle real-world pharmacist workflows.
     </p>
 
     <a href="/chatbot"
-       class="mt-10 inline-block bg-white text-gray-900 px-10 py-4 rounded-2xl text-xl font-semibold shadow-2xl hover:scale-110 hover:shadow-[0_0_40px_#fff] transition-all glow">
+       class="btn-primary glow-xl px-12 py-5 text-2xl rounded-2xl">
         Try Chatbot →
     </a>
 </section>
 
-<!-- FEATURES -->
+<!-- FEATURE SECTION -->
 <section class="grid grid-cols-1 md:grid-cols-3 gap-10 px-10 pb-20 fade-in">
-    <div class="p-8 rounded-2xl glass shadow-xl card-float">
-        <h3 class="text-xl font-bold mb-4 text-white">RAG Powered</h3>
-        <p class="text-gray-200">Retrieves SOPs and product info using high-quality embeddings.</p>
+    <div class="glass-card p-10 rounded-3xl">
+        <h3 class="text-xl font-bold mb-4">⚡ RAG Engine</h3>
+        <p class="text-gray-300">High-accuracy answers powered by Gemini embeddings + ChromaDB context retrieval.</p>
     </div>
 
-    <div class="p-8 rounded-2xl glass shadow-xl card-float">
-        <h3 class="text-xl font-bold mb-4 text-white">Multilingual</h3>
-        <p class="text-gray-200">Understands and replies in Hindi, Marathi, Gujarati, English.</p>
+    <div class="glass-card p-10 rounded-3xl">
+        <h3 class="text-xl font-bold mb-4">🌐 Multilingual</h3>
+        <p class="text-gray-300">Understands Hindi, Marathi, Gujarati, and English with auto-language detection.</p>
     </div>
 
-    <div class="p-8 rounded-2xl glass shadow-xl card-float">
-        <h3 class="text-xl font-bold mb-4 text-white">Industry Ready</h3>
-        <p class="text-gray-200">Designed for high-speed, real-world pharmacy workflows.</p>
+    <div class="glass-card p-10 rounded-3xl">
+        <h3 class="text-xl font-bold mb-4">💡 Industry Ready</h3>
+        <p class="text-gray-300">Designed in collaboration with CareEco. Updated KB + real operational workflows.</p>
+    </div>
+</section>
+
+<!-- ARCHITECTURE SECTION -->
+<section class="px-10 pb-28 fade-in max-w-5xl mx-auto">
+    <h2 class="text-4xl font-bold mb-6 text-center">System Architecture</h2>
+    <div class="glass-card p-10 rounded-3xl space-y-4 text-gray-200 text-lg">
+        <p>✔ User query → multilingual preprocessing</p>
+        <p>✔ Gemini embeddings → vector search via ChromaDB</p>
+        <p>✔ Groq LLM → structured step-wise response</p>
+        <p>✔ Translation → return in user’s original language</p>
+        <p>✔ Cloud deployment on Render</p>
     </div>
 </section>
 
