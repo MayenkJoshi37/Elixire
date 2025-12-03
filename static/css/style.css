@@ -1,0 +1,140 @@
+/* ------------------------------
+   GLOBAL GLASS & EFFECTS
+--------------------------------*/
+
+.glass {
+    backdrop-filter: blur(14px);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Soft Glow (used for buttons/cards) */
+.glow:hover {
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+    transform: translateY(-2px);
+    transition: 0.25s ease;
+}
+
+/* ------------------------------
+   ANIMATIONS
+--------------------------------*/
+
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.slide-up {
+    animation: slideUp 0.8s ease-out;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.typing-pulse {
+    animation: pulse 1.2s infinite ease-in-out;
+}
+
+@keyframes pulse {
+    0% { opacity: .3; }
+    50% { opacity: 1; }
+    100% { opacity: .3; }
+}
+
+/* Message bubble pop */
+.bubble-pop {
+    animation: bubblePop 0.3s ease-out;
+}
+
+@keyframes bubblePop {
+    0% { transform: scale(0.85); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* ------------------------------
+   SCROLLBAR STYLING
+--------------------------------*/
+
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.28);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.45);
+}
+
+/* ------------------------------
+   CHAT BUBBLE LOOK ENHANCEMENTS
+--------------------------------*/
+
+.chat-user {
+    background: rgba(255, 255, 255, 0.85);
+    color: #111;
+    border-radius: 16px 16px 0 16px;
+}
+
+.chat-bot {
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #f1f1f1;
+    border-radius: 16px 16px 16px 0;
+}
+
+/* ------------------------------
+   INPUT FIELD CUSTOM DESIGN
+--------------------------------*/
+
+.glass-input {
+    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    transition: 0.3s;
+}
+
+.glass-input:focus {
+    background: rgba(255, 255, 255, 0.28);
+    border-color: white;
+    outline: none;
+}
+
+/* ------------------------------
+   BUTTONS
+--------------------------------*/
+
+.glass-btn {
+    background: rgba(255, 255, 255, 0.9);
+    color: #111;
+    transition: 0.25s ease;
+}
+
+.glass-btn:hover {
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(255, 255, 255, 0.25);
+}
+
+/* ------------------------------
+   EXTRA COMPONENTS
+--------------------------------*/
+
+/* Floating subtle shadows */
+.card-float:hover {
+    transform: translateY(-6px);
+    transition: 0.3s ease;
+    box-shadow: 0 14px 30px rgba(0, 0, 0, 0.35);
+}
