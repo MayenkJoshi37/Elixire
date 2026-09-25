@@ -1,308 +1,481 @@
-<<<<<<< HEAD
-Elixire Assistant — README.md
+# Elixire — Multilingual Conversational Assistant
 
-Drop this README.md into the root of your Elixire_Deploy repo and commit. It is written to match the app.py, web_server.py, and templates/index.html files you shared. Read and edit the sections labelled REPLACE_ME (email, keys, etc.) before pushing.
+A multilingual, retrieval-augmented AI assistant built for **Elixire Pharmacy Management Software**.
 
-Elixire Assistant
+The assistant helps pharmacists understand and use the software through **short, simple, step-by-step answers** in multiple languages. It combines language processing, semantic retrieval, and LLM-based generation to ground responses in the application's training resources.
 
-A small Flask-based chat assistant for Elixire (a pharmacy management helper).
-It uses:
+> Developed as part of an industry–academia collaboration.
 
-Gemini (Google) for embeddings,
+## Live Demo
 
-a GROQ LLM (via langchain_groq) for preprocessing / generation / translation,
+**https://elixire-deploy.onrender.com**
 
-optional ChromaDB for retrieval-augmented responses,
+---
 
-a minimal Tailwind-based web UI (templates/index.html).
+## Overview
 
-Repository layout
+Elixire turns pharmacy training material, such as YouTube transcripts and documentation, into a searchable knowledge base.
+
+When a user asks a question, the system:
+
+1. Detects the user's language.
+2. Translates the query into English when required.
+3. Retrieves relevant information from the knowledge base.
+4. Generates a concise response using the retrieved context.
+5. Translates the response back into the user's original language.
+6. Returns the formatted answer to the frontend.
+
+The goal is to provide **grounded, practical answers** rather than generic chatbot responses.
+
+---
+
+## Key Features
+
+* **Multilingual interaction** with automatic language detection and translation
+* **Retrieval-Augmented Generation (RAG)** for context-grounded responses
+* **Semantic search** over pharmacy training material
+* **Concise, step-by-step answers** designed for software users
+* **Persistent ChromaDB vector storage** for the knowledge base
+* **LLM-powered query processing and response generation**
+* **Separation between knowledge retrieval and response generation**
+* **Web-based interface** for interacting with the assistant
+
+---
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[User] --> B[Frontend]
+    B --> C[Flask API]
+
+    C --> D[Language Detection]
+    D --> E[Query Translation]
+
+    E --> F[Query Embedding]
+    F --> G[ChromaDB Retrieval]
+
+    G --> H[Relevant Context]
+    H --> I[LLM Response Generation]
+
+    I --> J[Response Translation]
+    J --> B
+    B --> A
+```
+
+### Knowledge Base Pipeline
+
+Training resources are transformed into a searchable vector database:
+
+```text
+Training Resources
+       ↓
+Transcript / Document Processing
+       ↓
+Cleaning & Chunking
+       ↓
+Embedding Generation
+       ↓
+ChromaDB
+```
+
+### Query Pipeline
+
+A user's question follows this pipeline:
+
+```text
+User Query
+    ↓
+Language Detection
+    ↓
+Translation to English
+    ↓
+Query Embedding
+    ↓
+ChromaDB Similarity Search
+    ↓
+Relevant Context
+    ↓
+LLM Generation
+    ↓
+Translation to Original Language
+    ↓
+Final Response
+```
+
+---
+
+## Tech Stack
+
+| Component              | Technology                       |
+| ---------------------- | -------------------------------- |
+| Backend                | Python, Flask                    |
+| LLM                    | Groq                             |
+| Embeddings             | Gemini                           |
+| Vector Database        | ChromaDB                         |
+| Embedding Model        | BGE-large / SentenceTransformers |
+| Frontend               | React                            |
+| Environment Management | `.env`                           |
+| Deployment             | Render                           |
+
+---
+
+## Repository Structure
+
+```text
 Elixire_Deploy/
-├─ app.py                 # core business logic (embeddings, Chroma lazy loader, LLM helpers)
-├─ web_server.py          # Flask server (routes: /, /health, /chat)
-├─ templates/
-│  └─ index.html          # chat UI (Tailwind)
-├─ requirements.txt       # (recommended to add)
-├─ .env.example           # (recommended to add)
-└─ README.md
+│
+├── app.py
+│   └── Core assistant logic, embeddings, retrieval and LLM operations
+│
+├── vector_creation.py
+│   └── Creates embeddings and builds the ChromaDB knowledge base
+│
+├── web_server.py
+│   └── Flask server and API routes
+│
+├── frontend/
+│   └── React frontend
+│
+├── chroma_db/
+│   └── Persistent ChromaDB vector store
+│
+├── requirements.txt
+│   └── Python dependencies
+│
+├── .env
+│   └── Local environment configuration
+│
+└── README.md
+```
 
+---
 
-NOTE: Your copy included tempelate/index.html vs templates/index.html. Flask expects templates/. If your file is currently in tempelate/, rename it:
+## Getting Started
 
-git mv tempelate templates || mkdir -p templates && mv tempelate/index.html templates/
-git add -A && git commit -m "Fix template folder name"
+### 1. Clone the repository
 
-Quickstart — local development
-
-Clone & enter repo
-
-git clone git@github.com:MayenkJoshi37/Elixire_Deploy.git
+```bash
+git clone https://github.com/MayenkJoshi37/Elixire_Deploy.git
 cd Elixire_Deploy
+```
 
+### 2. Create a virtual environment
 
-Create a Python virtual environment
-
+```bash
 python -m venv .venv
-# macOS / Linux
-source .venv/bin/activate
-# Windows (PowerShell)
+```
+
+Activate it on Windows:
+
+```powershell
 .venv\Scripts\Activate.ps1
+```
 
+Activate it on macOS/Linux:
 
-Install dependencies
+```bash
+source .venv/bin/activate
+```
 
-Create requirements.txt (example provided below) and install:
+### 3. Install dependencies
 
+```bash
 pip install -r requirements.txt
+```
 
+### 4. Configure environment variables
 
-Create .env
+Create a `.env` file in the project root.
 
-Copy the example and update values:
-
-cp .env.example .env
-# then edit .env with your keys/URLs
-
-
-Run the server
-
-python web_server.py
-
-
-Open the UI at: http://localhost:8000/ (default port from .env or 8000)
-
-.env.example (copy to .env and fill values)
-
-Create a file .env in repo root — do not commit secrets.
-
-# Gemini embeddings
-GEMINI_API_KEY=REPLACE_ME_GEMINI_KEY
+```env
+# Gemini
+GEMINI_API_KEY=your_gemini_api_key
 EMBEDDING_MODEL=gemini-embedding-001
 
-# GROQ / LLM
-GROQ_API_KEY=REPLACE_ME_GROQ_KEY
+# Groq
+GROQ_API_KEY=your_groq_api_key
 GROQ_MODEL_NAME=openai/gpt-oss-120b
 
-# Chroma (optional retrieval DB)
+# ChromaDB
 CHROMA_PATH=./chroma_db
-# Option A: direct zip URL (public or authenticated)
-CHROMA_DB_DOWNLOAD_URL=
-# Option B: Google Drive file id of zip (example: 1AbCDef...)
-CHROMA_DB_DRIVE_FILE_ID=
 CHROMA_COLLECTION_NAME=elixire_docs_bge_large
 
-# Server / misc
+# Optional remote ChromaDB source
+CHROMA_DB_DOWNLOAD_URL=
+CHROMA_DB_DRIVE_FILE_ID=
+
+# Server
 PORT=8000
 FLASK_DEBUG=false
 LOG_LEVEL=INFO
+
+# Retrieval
 DEFAULT_N_RESULTS=1
 MAX_N_RESULTS=5
+```
 
-Minimal requirements.txt suggestion
+**Never commit `.env` or API keys to the repository.**
 
-Add this file to the repo (tweak versions as needed). After you verify in your environment, run pip freeze > requirements.txt for exact pins.
+### 5. Run the backend
 
-Flask>=2.0
-python-dotenv>=0.20.0
-requests>=2.28.0
-chromadb>=0.3.0            # only if you use Chroma retrieval
-google-generativeai>=0.1.0 # for `from google import genai`
-langchain-groq             # or the exact package/distribution you use
-langchain-core             # as used by your GROQ client
+```bash
+python web_server.py
+```
 
+The backend runs on:
 
-NOTE: package names for GROQ/langchain_groq may differ depending on how you installed them. If you already have a working virtualenv, generate a pinned requirements.txt with pip freeze > requirements.txt.
+```text
+http://localhost:8000
+```
 
-How it works — high level
+---
 
-Client (browser UI) posts user's message to POST /chat.
+## How Retrieval Works
 
-web_server.py:
+Elixire uses **ChromaDB** as its persistent vector store.
 
-Calls preprocess_user_query() (GROQ LLM) to normalize / translate to English.
+If an existing database is available at:
 
-Calls get_relevant_chunks() to query ChromaDB using Gemini embeddings (if Chroma is available).
+```text
+./chroma_db
+```
 
-Calls generate_response() which sends a system prompt + user message to GROQ LLM.
+the application loads it directly.
 
-Calls postprocess_answer() to translate response into original language (if necessary).
+The application can also initialize the database from a remote source using either:
 
-Returns JSON to the UI which formats the output.
+```env
+CHROMA_DB_DOWNLOAD_URL=
+```
 
-Frontend (templates/index.html) renders the chat and applies simple formatting to numbered steps.
+or:
 
-Chat API
+```env
+CHROMA_DB_DRIVE_FILE_ID=
+```
 
-Endpoint: POST /chat
-Body (JSON):
+When no vector database is available, retrieval returns no document context and the assistant can still generate a response without retrieved knowledge.
 
+---
+
+## Vector Database Creation
+
+The knowledge base is created using `vector_creation.py`.
+
+The general process is:
+
+```text
+Training Content
+      ↓
+Text Extraction
+      ↓
+Cleaning
+      ↓
+Chunking
+      ↓
+BGE-large Embeddings
+      ↓
+ChromaDB Collection
+```
+
+The resulting collection is then used during query-time retrieval.
+
+---
+
+## API
+
+### `POST /chat`
+
+Processes a user query and returns the generated response.
+
+#### Request
+
+```json
 {
   "message": "How do I add a new medicine to inventory?",
   "n_results": 1
 }
+```
 
+#### Example
 
-Curl example
-
+```bash
 curl -X POST http://localhost:8000/chat \
   -H "Content-Type: application/json" \
   -d '{"message":"How do I add a new medicine to inventory?","n_results":1}'
+```
 
+#### Response
 
-Response
-
+```json
 {
   "success": true,
-  "answer": "<formatted text>",
-  "used_chunks": ["..."],    # context returned from Chroma (if any)
+  "answer": "<formatted response>",
+  "used_chunks": ["..."],
   "original_language": "en"
 }
+```
 
-ChromaDB notes (important if using retrieval)
+### `GET /health`
 
-app.py checks CHROMA_PATH — if a populated directory exists, it opens it with chromadb.PersistentClient.
+Health-check endpoint used to verify that the backend is running.
 
-If CHROMA_PATH is missing/empty and you provided CHROMA_DB_DOWNLOAD_URL or CHROMA_DB_DRIVE_FILE_ID, the app will attempt to download a zip and extract into CHROMA_PATH.
+```text
+GET /health
+```
 
-If neither is supplied, retrieval calls will simply return empty context (the assistant will still respond but without document context).
+---
 
-If you want to provide a zipped Chroma DB in Google Drive, set CHROMA_DB_DRIVE_FILE_ID. If you have a direct download URL, set CHROMA_DB_DOWNLOAD_URL.
+## Response Generation
 
-Troubleshooting
+The response generation layer receives:
 
-RuntimeError: Please set GEMINI_API_KEY — add GEMINI_API_KEY to .env.
+* the original user query
+* processed/translated query information
+* retrieved knowledge-base context
+* system instructions
 
-Template not found / 500 on / — ensure folder is templates/ (Flask default). See note above.
+The LLM then generates a concise, task-oriented response.
 
-Chroma download/extract failed — check CHROMA_DB_DOWNLOAD_URL or Drive file id and network access. The server logs print download errors.
+Responses are formatted to make procedural instructions easy to follow, particularly for workflows inside the pharmacy management software.
 
-Embedding / LLM errors — ensure API keys (Gemini / GROQ) and model names are correct and that your environment has network access.
+---
 
-Dependency errors — install correct packages and pin versions in requirements.txt.
+## Multilingual Processing
 
-Optional: Docker (simple example)
+Elixire is designed to support users who interact with the system in languages other than English.
 
-Create a Dockerfile (example):
+The processing flow is:
 
-FROM python:3.10-slim
-WORKDIR /app
-COPY . /app
-RUN pip install --no-cache-dir -r requirements.txt
-ENV PORT=8000
-EXPOSE 8000
-CMD ["python", "web_server.py"]
+```text
+User Message
+    ↓
+Language Detection
+    ↓
+Translate → English
+    ↓
+Retrieve Relevant Context
+    ↓
+Generate Response
+    ↓
+Translate ← Original Language
+    ↓
+User
+```
 
+This allows retrieval and generation to operate consistently while preserving the language of the user's interaction.
 
-A minimal docker-compose.yml:
+---
 
-version: "3.8"
-services:
-  elixire:
-    build: .
-    ports:
-      - "8000:8000"
-    environment:
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - GROQ_API_KEY=${GROQ_API_KEY}
-      - PORT=8000
-    volumes:
-      - .:/app
+## Environment Variables
 
+| Variable                  | Purpose                                |
+| ------------------------- | -------------------------------------- |
+| `GEMINI_API_KEY`          | Gemini API authentication              |
+| `EMBEDDING_MODEL`         | Embedding model used for vectorization |
+| `GROQ_API_KEY`            | Groq API authentication                |
+| `GROQ_MODEL_NAME`         | LLM used for processing and generation |
+| `CHROMA_PATH`             | Local ChromaDB directory               |
+| `CHROMA_COLLECTION_NAME`  | ChromaDB collection name               |
+| `CHROMA_DB_DOWNLOAD_URL`  | Optional remote database download URL  |
+| `CHROMA_DB_DRIVE_FILE_ID` | Optional Google Drive database file ID |
+| `PORT`                    | Flask server port                      |
+| `FLASK_DEBUG`             | Flask debug mode                       |
+| `LOG_LEVEL`               | Application logging level              |
+| `DEFAULT_N_RESULTS`       | Default number of retrieved chunks     |
+| `MAX_N_RESULTS`           | Maximum number of retrieved chunks     |
 
-Keep secrets out of committed compose files — use .env only locally or use secret management in production.
+---
 
-Security & best practices
+## Troubleshooting
 
-Do not commit .env or any file containing secrets. Add .env to .gitignore.
+### `GEMINI_API_KEY` error
 
-Use environment-specific configs for production and protect API keys (do not store them in source).
+Make sure the key is present in `.env`:
 
-If you expose the app publicly, protect the /chat endpoint with authentication or rate-limiting.
+```env
+GEMINI_API_KEY=your_key
+```
 
-Tests & development tips
+### ChromaDB retrieval is empty
 
-Add unit tests for preprocess_user_query, get_relevant_chunks, and postprocess_answer.
+Verify that:
 
-Add logging where helpful; current code uses logging in web_server.py and print() in app.py.
+```text
+CHROMA_PATH
+```
 
-Freeze working dependencies: pip freeze > requirements.txt
+points to a populated ChromaDB directory, or configure one of the supported remote database sources.
 
-License & contact
-License: MIT (replace with your desired license)
-Maintainer: Mayenk Joshi — REPLACE_ME_EMAIL@example.com
-Repo: https://github.com/MayenkJoshi37/Elixire_Deploy
-=======
+### Template / frontend errors
 
-# Elixire — Multilingual Conversational Assistant
+Verify that the frontend files are located in the expected project directory and that the frontend/backend configuration points to the correct API endpoint.
 
-A multilingual, retrieval-augmented AI assistant built for the Elixire Pharmacy Management Software.
-The assistant helps pharmacists understand and use the software through short, simple, step-wise answers in multiple languages.
+### LLM errors
 
-This project was developed as part of an industry–academia collaboration.
+Check:
 
+```text
+GROQ_API_KEY
+GROQ_MODEL_NAME
+```
 
-## Live Demo
+and make sure the selected model is available to your Groq account.
 
-https://elixire-deploy.onrender.com
+### Dependency errors
 
+Recreate the environment and reinstall:
 
+```bash
+python -m venv .venv
+```
 
+```bash
+pip install -r requirements.txt
+```
 
-## Repository Structure
+---
 
-Elixire_Deploy/
-- app.py — Main backend logic (embeddings, retrieval, LLM calls)  
-- vector_creation.py — Creates embeddings and builds the ChromaDB  
-- web_server.py — (If included) Backend server for API  
-- chroma_db/ — Persistent Chroma vector DB  
-- requirements.txt — Python dependencies  
-- frontend/ — React-based UI (if included)  
-- README.md — Project documentation  
+## Security
 
-## Project Summary
+Do not commit secrets or credentials.
 
-The Elixire Assistant converts training resources (like YouTube transcripts) into a searchable vector database. User queries are processed through language detection, translation, vector retrieval, and LLM generation to produce short, accurate, pharmacist-friendly outputs.
+Add `.env` to `.gitignore`:
 
+```gitignore
+.env
+.venv/
+__pycache__/
+```
 
-## The System Uses
+When deploying the application publicly, API keys should be stored as environment variables through the deployment platform rather than inside source code.
 
-Gemini Embeddings
-ChromaDB
-Groq LLM (generation and translation)
-SentenceTransformer (BGE-large)
-React frontend + Python backend
+For a production deployment, the `/chat` endpoint should also be protected against abuse through appropriate authentication and/or rate limiting.
 
-## Key Features
+---
 
-Multilingual support (automatic language detection and translation)
-Retrieval-Augmented Generation (RAG) using ChromaDB
-Step-wise, concise answers for pharmacy users
-Low hallucination due to strict context grounding
-Pluggable LLM backends (Groq, Gemini, Ollama)
-Modular architecture for easy integration into web or desktop apps
+## Development
 
+Useful areas for future development include:
 
-## System Architecture Overview
+* expanding the knowledge base
+* improving document chunking and retrieval
+* adding evaluation for retrieval quality
+* improving multilingual accuracy
+* adding automated tests for the assistant pipeline
+* improving observability and logging
 
-### 1. Knowledge Base Preparation
+---
 
-YouTube transcripts are cleaned and chunked
-Embeddings are generated using BGE-large
-Chunks and embeddings are stored in a ChromaDB persistent collection
+## License
 
+This project is released under the **MIT License**.
 
-### 2. Query Processing
+---
 
-User's language is detected using Groq LLM
-Query is translated into English
-Query is embedded using Gemini Embeddings
-ChromaDB is queried to retrieve the most relevant chunks
+## Author
 
+**Mayenk Joshi**
 
-### 3. Response Generation
-
-Groq LLM uses retrieved context and system rules
-Generates short, numbered, step-wise responses
-Translates the output back to the user’s original language
-The frontend displays the final formatted answer
->>>>>>> 806a4659ba9ced329b9811f5ded1618d095e9b75
+GitHub: [MayenkJoshi37](https://github.com/MayenkJoshi37)
